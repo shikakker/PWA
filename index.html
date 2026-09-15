@@ -37,9 +37,11 @@
 
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register(
-        import.meta.env.MODE === 'production' ? '/sw.js' : '/sw.js?dev-sw'
-      );
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch((error) => {
+          console.error('Service worker registration failed:', error);
+        });
+      });
     }
   </script>
 </body>
