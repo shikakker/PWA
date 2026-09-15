@@ -34,16 +34,6 @@
   <fluent-design-system-provider>
     <app-index></app-index>
   </fluent-design-system-provider>
-
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch((error) => {
-          console.error('Service worker registration failed:', error);
-        });
-      });
-    }
-  </script>
 </body>
 
 </html>
