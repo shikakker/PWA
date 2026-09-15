@@ -13,7 +13,7 @@
     "deploy": " npx @azure/static-web-apps-cli login --no-use-keychain && npx @azure/static-web-apps-cli deploy",
     "build": "tsc && vite build",
     "test": "node --test tests/*.test.mjs",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit --declaration false --emitDeclarationOnly false",
     "start": "npm run dev",
     "start-remote": "vite --host"
   },
