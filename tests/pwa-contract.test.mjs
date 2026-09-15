@@ -3,17 +3,20 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 const indexHtml = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+const appIndex = await readFile(new URL('../src/app-index.ts', import.meta.url), 'utf8');
 const manifest = JSON.parse(
   await readFile(new URL('../public/manifest.json', import.meta.url), 'utf8'),
 );
 
-test('service-worker registration is valid browser JavaScript', () => {
+test('service worker is registered once through the VitePWA module path', () => {
   const classicScripts = [...indexHtml.matchAll(/<script(?![^>]*type=["']module["'])[^>]*>([\s\S]*?)<\/script>/gi)]
     .map((match) => match[1])
     .join('\n');
 
   assert.doesNotMatch(classicScripts, /import\.meta/);
-  assert.match(indexHtml, /serviceWorker\.register\(['"]\/sw\.js['"]\)/);
+  assert.doesNotMatch(indexHtml, /navigator\.serviceWorker\.register/);
+  assert.match(appIndex, /from ['"]virtual:pwa-register['"]/);
+  assert.match(appIndex, /registerSW\(\{\s*immediate:\s*true\s*\}\)/);
 });
 
 test('installability metadata remains explicitly linked and scoped', () => {
