@@ -30,6 +30,8 @@ jobs:
         run: npm uninstall workbox-build workbox-core workbox-precaching
       - name: Upgrade runtime router security boundary
         run: npm install --save-exact @vaadin/router@2.0.1
+      - name: Upgrade TypeScript for patched router types
+        run: npm install --save-dev --save-exact typescript@5.9.2
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high
       - name: PWA contracts
