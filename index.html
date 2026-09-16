@@ -24,7 +24,8 @@
   <!-- Imports the manifest to represent the web application. A web app must have a manifest to be a PWA. -->
   <link rel="manifest" href="/manifest.json" />
 
-  <script type="module" src="https://unpkg.com/@fluentui/web-components" crossorigin="anonymous"></script>
+  <!-- Pin the Fluent Web Components runtime so deployments cannot change without a repository commit. -->
+  <script type="module" src="https://unpkg.com/@fluentui/web-components@2.5.14" crossorigin="anonymous"></script>
 
   <script type="module" src="/src/app-index.ts"></script>
 </head>
