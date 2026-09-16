@@ -4,6 +4,7 @@ import test from 'node:test';
 
 const indexHtml = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 const appIndex = await readFile(new URL('../src/app-index.ts', import.meta.url), 'utf8');
+const viteConfig = await readFile(new URL('../vite.config.ts', import.meta.url), 'utf8');
 const manifest = JSON.parse(
   await readFile(new URL('../public/manifest.json', import.meta.url), 'utf8'),
 );
@@ -26,4 +27,10 @@ test('installability metadata remains explicitly linked and scoped', () => {
   assert.equal(manifest.display, 'standalone');
   assert.ok(Array.isArray(manifest.icons) && manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(Array.isArray(manifest.icons) && manifest.icons.some((icon) => icon.sizes === '512x512'));
+});
+
+test('third-party UI runtime is version-pinned and development does not install a service worker', () => {
+  assert.match(indexHtml, /https:\/\/unpkg\.com\/@fluentui\/web-components@2\.5\.14(?:["'/?#])/);
+  assert.doesNotMatch(indexHtml, /https:\/\/unpkg\.com\/@fluentui\/web-components["']/);
+  assert.doesNotMatch(viteConfig, /devOptions\s*:\s*\{[\s\S]*?enabled\s*:\s*true/);
 });
