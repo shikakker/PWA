@@ -1,31 +1,30 @@
 # Product Completion Status — PWA Starter
 
-Canonical repository: `shikakker/PWA`
-
-Completion branch: `ai/product-completion/PWA`
-
-Vercel project: `pwa` (`prj_pjMYCdI7gVWcmyDj5cHwSgCSe7LH`)
+Canonical repository: `shikakker/PWA`  
+Completion branch: `ai/product-completion/PWA`  
+Draft PR: #2  
+Vercel project: `pwa` (`prj_pjMYCdI7gVWcmyDj5cHwSgCSe7LH`).
 
 ## Product definition
 
-User → needs a small installable PWA reference → opens the app, navigates through the client shell, installs it, receives service-worker updates → gets a stable offline-capable starter without duplicate registration or a vulnerable runtime dependency surface.
+User → needs a small installable PWA reference → opens the app, navigates through the client shell, installs it and receives service-worker updates → gets a stable offline-capable starter without duplicate registration, unpinned CDN runtime or vulnerable build tooling.
 
-Current maturity: working starter/reference project. This is not a standalone commercial product and should be treated as a maintained PWA implementation example.
+Current maturity: maintained starter/reference project, not a standalone commercial product.
 
 ## T01–T10 — Core tasks
 
 | ID | Priority | Status | Task |
 | --- | --- | --- | --- |
-| T01 | P0 | DONE | Reproduce and remove invalid classic-script `import.meta` usage. |
-| T02 | P0 | DONE | Ensure service worker has one registration owner through VitePWA. |
-| T03 | P0 | DONE | Remove critical/high production dependency findings. |
-| T04 | P1 | DONE | Upgrade runtime router to a patched line. |
-| T05 | P1 | DONE | Keep build-only Workbox tooling outside production dependencies. |
-| T06 | P1 | DONE | Upgrade TypeScript so patched runtime types are checked without `skipLibCheck`. |
-| T07 | P1 | DONE | Add installability/service-worker regression contracts. |
-| T08 | P1 | DONE | Add permanent Node 22 Quality workflow. |
-| T09 | P1 | IN PROGRESS | Verify the final completion head on an exact Vercel preview. |
-| T10 | P2 | IN PROGRESS | Browser-install/offline/update smoke on the final preview. |
+| T01 | P0 | DONE | Removed invalid classic-script `import.meta` service-worker registration. |
+| T02 | P0 | DONE | VitePWA is the single service-worker lifecycle owner. |
+| T03 | P0 | DONE | Production dependency audit is clean. |
+| T04 | P1 | DONE | Runtime router upgraded to patched `@vaadin/router` 2.0.1. |
+| T05 | P1 | DONE | Build-only Workbox/PWA tooling remains outside production dependencies. |
+| T06 | P1 | DONE | TypeScript upgraded to 5.9.2 without `skipLibCheck`. |
+| T07 | P1 | DONE | Installability/service-worker/CDN regression contracts added. |
+| T08 | P1 | DONE | Permanent Node 22 / Actions v7 Quality gate. |
+| T09 | P0 | DONE | Removed high/critical tooling audit findings by migrating Vite 2.9 → 8.3.0 and vite-plugin-pwa 0.11 → 1.3.0. |
+| T10 | P1 | BLOCKED | Exact-current-head Vercel preview/browser install/offline/update smoke is blocked by Hobby deployment-rate capacity. |
 
 ## I01–I10 — Improvements
 
@@ -33,13 +32,13 @@ Current maturity: working starter/reference project. This is not a standalone co
 | --- | --- | --- |
 | I01 | DONE | Node 22 runtime declaration. |
 | I02 | DONE | Frozen npm install in CI. |
-| I03 | DONE | Production audit gate at high severity. |
+| I03 | DONE | Production and full dependency audit gates at high severity. |
 | I04 | DONE | Separate non-emitting TypeScript verification from declaration build semantics. |
-| I05 | DONE | Keep strict dependency type checking; no `skipLibCheck` workaround added. |
+| I05 | DONE | Strict dependency type checking retained. |
 | I06 | DONE | Single service-worker lifecycle owner. |
-| I07 | DONE | Repository-specific README/provenance. |
-| I08 | DONE | PWA manifest scope/start/display/icon regression coverage. |
-| I09 | IN PROGRESS | Exact hosted browser console/network verification. |
+| I07 | DONE | Third-party Fluent Web Components CDN runtime pinned to `2.5.14`. |
+| I08 | DONE | Service worker disabled in development; runtime cache narrowed to the exact pinned CDN asset family. |
+| I09 | DONE | Actions v7 removes deprecated Node-20 action runtime warnings. |
 | I10 | DEFERRED WITH REASON | Lighthouse/performance tuning follows exact final preview availability. |
 
 ## F01–F10 — Product features
@@ -59,15 +58,29 @@ Current maturity: working starter/reference project. This is not a standalone co
 
 ## Verification evidence
 
-- Initial hosted production dependency audit: 22 production vulnerabilities, including 2 critical and 16 high.
-- Guarded migration separated direct Workbox build tooling from runtime dependencies, upgraded `@vaadin/router` to 2.0.1, and upgraded TypeScript to 5.9.2.
-- Guarded migration run `34916966366`: install PASS, production audit **0 vulnerabilities**, PWA contracts PASS, TypeScript PASS, production build PASS, synchronized manifest/lockfile commit PASS.
-- Permanent Quality run `34917071146` on completion head `1e3ca731a9f6d0832868e2171fb7f2e7c6024718`: PASS for frozen install, production audit, contracts, TypeScript, and production build.
-- The first completion-branch Vercel preview `dpl_3HsAZCGKmFiXEk4SRE64LgF4QnRF` is READY, but it predates the final service-worker/dependency fixes; exact final preview verification remains pending.
-- Historical production deployment remains separate and is not treated as evidence for the completion branch.
+Initial completion work found 22 production vulnerabilities, including 2 critical and 16 high; the guarded runtime migration reduced the production graph to 0 vulnerabilities and established frozen CI.
 
-## Real blockers / next action
+Second sweep found two additional release-quality problems:
 
-No unresolved code/security P0 is known on the completion branch.
+1. `index.html` loaded unversioned `https://unpkg.com/@fluentui/web-components`, allowing third-party runtime behavior to change without a repository commit, while the service worker cached broad `unpkg.com` responses for one year and was enabled in development.
+2. `npm ci` still reported 27 build/tooling vulnerabilities, including 19 high and 2 critical, even though the production graph was clean.
 
-Next action: obtain exact-head Vercel preview → verify root/manifest/sw.js → browser install/offline/update and console/network smoke → mark hosted delivery DONE if all pass. Production promotion is not automatic.
+TDD evidence for the CDN/service-worker boundary:
+- RED Quality run `35119623271` failed on the new pinned-runtime/dev-SW contract.
+- GREEN Quality run `35119704307`, job `104874047544`, passed after pinning Fluent Web Components `2.5.14`, narrowing the cache rule and disabling the development service worker.
+
+Tooling security evidence:
+- RED Quality run `35120005304`, job `104875075547`, passed production audit then failed the new full dependency audit on the legacy Vite/Workbox/Babel/Rollup toolchain.
+- Guarded tooling migration run `35120103345`, job `104875415673`, migrated to Vite `8.3.0` and vite-plugin-pwa `1.3.0`, applied non-breaking audit fixes, then passed full audit, contracts, typecheck and production build before committing the synchronized `package.json` / `package-lock.json`.
+- The temporary write-capable migration workflow was removed.
+- Final read-only exact-head verification on `2d01e487f7c8b9aee3d7a3cb9a927e75a9e52c60`, Quality run `35120258948`, job `104875936169`: `npm ci` PASS; production audit PASS; full dependency audit PASS; tests PASS; typecheck PASS; Vite/PWA production build PASS.
+
+Canonical Vercel project `pwa` remains connected. The most recent READY completion-branch deployment `dpl_3HsAZCGKmFiXEk4SRE64LgF4QnRF` predates the final hardening. Exact-head Vercel status currently reports `Deployment rate limited — retry in 24 hours`, so no final browser/install/offline/runtime PASS is claimed.
+
+## Remaining release gate
+
+**BLOCKED ONLY BY:** Vercel Hobby build capacity for an exact-current-head preview followed by install/offline/update/console/network smoke.
+
+Status: **PARTIAL — repository runtime and tooling release lanes are green; exact hosted verification remains external.**
+
+No merge, production promotion, billing action or destructive operation has been performed automatically.
