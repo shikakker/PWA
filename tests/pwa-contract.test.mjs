@@ -32,5 +32,16 @@ test('installability metadata remains explicitly linked and scoped', () => {
 test('third-party UI runtime is version-pinned and development does not install a service worker', () => {
   assert.match(indexHtml, /https:\/\/unpkg\.com\/@fluentui\/web-components@2\.5\.14(?:["'/?#])/);
   assert.doesNotMatch(indexHtml, /https:\/\/unpkg\.com\/@fluentui\/web-components["']/);
+  assert.match(indexHtml, /crossorigin=["']anonymous["']/);
   assert.doesNotMatch(viteConfig, /devOptions\s*:\s*\{[\s\S]*?enabled\s*:\s*true/);
+});
+
+test('runtime cache matches only the exact pinned Fluent request and never caches opaque responses', () => {
+  assert.match(
+    viteConfig,
+    /urlPattern:\s*\/\^https:\\\/\\\/unpkg\\\.com\\\/@fluentui\\\/web-components@2\\\.5\\\.14\$\/i/,
+  );
+  assert.match(viteConfig, /statuses:\s*\[200\]/);
+  assert.doesNotMatch(viteConfig, /statuses:\s*\[0,\s*200\]/);
+  assert.doesNotMatch(viteConfig, /\(\?:\[\/?#\]/);
 });
