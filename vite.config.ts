@@ -20,7 +20,7 @@ export default defineConfig({
         ],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/unpkg\.com\/@fluentui\/web-components@2\.5\.14(?:[/?#].*)?$/i,
+            urlPattern: /^https:\/\/unpkg\.com\/@fluentui\/web-components@2\.5\.14$/i,
             handler: 'CacheFirst',
             options: {
               cacheName: 'fluentui-web-components-2.5.14',
@@ -29,7 +29,7 @@ export default defineConfig({
                 maxAgeSeconds: 60 * 60 * 24 * 365
               },
               cacheableResponse: {
-                statuses: [0, 200]
+                statuses: [200]
               }
             }
           }
