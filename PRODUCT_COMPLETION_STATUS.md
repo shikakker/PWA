@@ -7,7 +7,7 @@ Vercel project: `pwa` (`prj_pjMYCdI7gVWcmyDj5cHwSgCSe7LH`).
 
 ## Product definition
 
-User → needs a small installable PWA reference → opens the app, navigates through the client shell, installs it and receives service-worker updates → gets a stable offline-capable starter without duplicate registration, unpinned CDN runtime or vulnerable build tooling.
+User → needs a small installable PWA reference → opens the app, navigates through the client shell, installs it and receives service-worker updates → gets a stable offline-capable starter without duplicate registration, unpinned CDN runtime, over-broad third-party caching or vulnerable build tooling.
 
 Current maturity: maintained starter/reference project, not a standalone commercial product.
 
@@ -21,9 +21,9 @@ Current maturity: maintained starter/reference project, not a standalone commerc
 | T04 | P1 | DONE | Runtime router upgraded to patched `@vaadin/router` 2.0.1. |
 | T05 | P1 | DONE | Build-only Workbox/PWA tooling remains outside production dependencies. |
 | T06 | P1 | DONE | TypeScript upgraded to 5.9.2 without `skipLibCheck`. |
-| T07 | P1 | DONE | Installability/service-worker/CDN regression contracts added. |
+| T07 | P1 | DONE | Installability/service-worker/CDN/cache regression contracts added. |
 | T08 | P1 | DONE | Permanent Node 22 / Actions v7 Quality gate. |
-| T09 | P0 | DONE | Removed high/critical tooling audit findings by migrating Vite 2.9 → 8.3.0 and vite-plugin-pwa 0.11 → 1.3.0. |
+| T09 | P0 | DONE | Vite/Workbox tooling migrated to clean full-audit boundary. |
 | T10 | P1 | BLOCKED | Exact-current-head Vercel preview/browser install/offline/update smoke is blocked by Hobby deployment-rate capacity. |
 
 ## I01–I10 — Improvements
@@ -37,9 +37,9 @@ Current maturity: maintained starter/reference project, not a standalone commerc
 | I05 | DONE | Strict dependency type checking retained. |
 | I06 | DONE | Single service-worker lifecycle owner. |
 | I07 | DONE | Third-party Fluent Web Components CDN runtime pinned to `2.5.14`. |
-| I08 | DONE | Service worker disabled in development; runtime cache narrowed to the exact pinned CDN asset family. |
-| I09 | DONE | Actions v7 removes deprecated Node-20 action runtime warnings. |
-| I10 | DEFERRED WITH REASON | Lighthouse/performance tuning follows exact final preview availability. |
+| I08 | DONE | Third-party Workbox cache now matches only the exact pinned request and caches only CORS-verifiable HTTP 200 responses; opaque status 0 and path/query variants are excluded. |
+| I09 | DONE | Service worker disabled in development; Actions v7 removes deprecated action-runtime warnings. |
+| I10 | DEFERRED WITH REASON | Lighthouse/performance and interactive offline/update tuning follow exact final preview availability. |
 
 ## F01–F10 — Product features
 
@@ -58,29 +58,41 @@ Current maturity: maintained starter/reference project, not a standalone commerc
 
 ## Verification evidence
 
-Initial completion work found 22 production vulnerabilities, including 2 critical and 16 high; the guarded runtime migration reduced the production graph to 0 vulnerabilities and established frozen CI.
+Initial completion work removed duplicate service-worker ownership and migrated the runtime/tooling graph to a clean production/full-audit boundary. Earlier exact code/release head `2d01e487f7c8b9aee3d7a3cb9a927e75a9e52c60` passed `npm ci`, both audits, contracts, typecheck and Vite/PWA build.
 
-Second sweep found two additional release-quality problems:
+### Latest third-party cache slice
 
-1. `index.html` loaded unversioned `https://unpkg.com/@fluentui/web-components`, allowing third-party runtime behavior to change without a repository commit, while the service worker cached broad `unpkg.com` responses for one year and was enabled in development.
-2. `npm ci` still reported 27 build/tooling vulnerabilities, including 19 high and 2 critical, even though the production graph was clean.
+The Fluent runtime was version-pinned and loaded with `crossorigin="anonymous"`, but Workbox still matched any path/query suffix under the versioned package URL and allowed `cacheableResponse.statuses: [0, 200]`. That could persist opaque/unverifiable responses and cache requests outside the single runtime entry the page actually uses.
 
-TDD evidence for the CDN/service-worker boundary:
-- RED Quality run `35119623271` failed on the new pinned-runtime/dev-SW contract.
-- GREEN Quality run `35119704307`, job `104874047544`, passed after pinning Fluent Web Components `2.5.14`, narrowing the cache rule and disabling the development service worker.
+- `914d8d07478134e373716016c29c18da82d71d74` — regression first: Workbox must match only the exact pinned package-root request and only cache HTTP 200.
+- Pre-fix exact config was RED because its regex allowed `(?:[/?#].*)?` and its cacheable statuses included `0`.
+- `3f027e30de1b9d0ba539f5c7dbeb58af865dfcd0` — narrows `urlPattern` to exact `https://unpkg.com/@fluentui/web-components@2.5.14` and `statuses: [200]`; the application script URL/version are unchanged.
+- An SRI hash was **not invented**: the execution network could not resolve `unpkg.com` to retrieve and hash the exact 2.5.14 bytes. The implemented change therefore improves the verifiable cache boundary without claiming artifact-integrity verification that was not performed.
 
-Tooling security evidence:
-- RED Quality run `35120005304`, job `104875075547`, passed production audit then failed the new full dependency audit on the legacy Vite/Workbox/Babel/Rollup toolchain.
-- Guarded tooling migration run `35120103345`, job `104875415673`, migrated to Vite `8.3.0` and vite-plugin-pwa `1.3.0`, applied non-breaking audit fixes, then passed full audit, contracts, typecheck and production build before committing the synchronized `package.json` / `package-lock.json`.
-- The temporary write-capable migration workflow was removed.
-- Final read-only exact-head verification on `2d01e487f7c8b9aee3d7a3cb9a927e75a9e52c60`, Quality run `35120258948`, job `104875936169`: `npm ci` PASS; production audit PASS; full dependency audit PASS; tests PASS; typecheck PASS; Vite/PWA production build PASS.
+Exact-head GitHub Quality run `35281779593`, job `105405121015`: **PASS** with real executed steps:
+- `npm ci`: PASS;
+- production high-severity audit: PASS;
+- full dependency high-severity audit: PASS;
+- `npm test`: PASS including the new cache-boundary contract;
+- typecheck: PASS;
+- Vite/PWA production build: PASS.
 
-Canonical Vercel project `pwa` remains connected. The most recent READY completion-branch deployment `dpl_3HsAZCGKmFiXEk4SRE64LgF4QnRF` predates the final hardening. Exact-head Vercel status currently reports `Deployment rate limited — retry in 24 hours`, so no final browser/install/offline/runtime PASS is claimed.
+## Hosted state
+
+Canonical Vercel project `pwa` remains connected. Exact runtime-head Vercel status for `3f027e30...` is still **Deployment rate limited** before application build. The last READY completion deployment predates the current cache hardening, so final install/offline/update/browser PASS is not claimed.
 
 ## Remaining release gate
 
-**BLOCKED ONLY BY:** Vercel Hobby build capacity for an exact-current-head preview followed by install/offline/update/console/network smoke.
+**BLOCKED ONLY BY:**
+1. Vercel Hobby build capacity for an exact-current-head preview;
+2. install/offline/update/console/network smoke on that exact preview.
 
-Status: **PARTIAL — repository runtime and tooling release lanes are green; exact hosted verification remains external.**
+## Project checkpoint
+
+**PROJECT:** `PWA`  
+**Fixed this pass:** narrowed third-party Workbox cache from an asset-family/opaque-response policy to the exact pinned CORS request with HTTP-200-only caching.  
+**Verification:** exact-head install/audits/tests/typecheck/build = **PASS**; Vercel exact head = RATE-LIMITED; interactive install/offline/update = NOT VERIFIED.  
+**Git:** `ai/product-completion/PWA`, Draft PR #2; verified runtime head `3f027e30...`.  
+**Status:** **PARTIAL**.
 
 No merge, production promotion, billing action or destructive operation has been performed automatically.
