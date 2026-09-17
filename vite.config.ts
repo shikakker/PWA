@@ -20,23 +20,20 @@ export default defineConfig({
         ],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/unpkg\.com\/.*/i,
+            urlPattern: /^https:\/\/unpkg\.com\/@fluentui\/web-components@2\.5\.14$/i,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'unpkg-libs-cache',
+              cacheName: 'fluentui-web-components-2.5.14',
               expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // <== 365 days
+                maxEntries: 2,
+                maxAgeSeconds: 60 * 60 * 24 * 365
               },
               cacheableResponse: {
-                statuses: [0, 200]
+                statuses: [200]
               }
             }
           }
         ]
-      },
-      devOptions: {
-        enabled: true
       }
     })
   ]

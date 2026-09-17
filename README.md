@@ -1,38 +1,65 @@
-# pwa-starter
+# PWA Starter
 
-Please use our [main repository for any issues/bugs/features suggestion](https://github.com/pwa-builder/PWABuilder/issues/new/choose).
+A small installable Progressive Web App starter based on PWABuilder's original template. This repository is kept as a working reference for Vite, Lit web components, client-side routing, a web app manifest, and service-worker lifecycle handling.
 
-[Documentation](https://docs.pwabuilder.com/#/starter/quick-start)
+## What works
 
-The PWABuilder pwa-starter is our opinionated, best practices, production tested starter that we use to build all of our PWAs, including [PWABuilder itself](https://blog.pwabuilder.com/posts/introducing-the-brand-new-pwa-builder/)! The pwa-starter is a starter codebase, just like create-react-app or the Angular CLI can generate, that uses the PWABuilder team&#39;s preferred front-end tech stack.
+- installable web app manifest with standalone display mode and 192/512 px icons;
+- a single service-worker registration path through `vite-plugin-pwa` / `virtual:pwa-register`;
+- automatic service-worker updates through the existing application update UI;
+- Lit-based application shell and Vaadin client-side routing;
+- Vite production build;
+- Node 22 CI with deterministic install, production dependency audit, PWA contract tests, TypeScript, and build verification.
 
-[![Get started with the pwa-starter!](https://img.youtube.com/vi/u3pWKpmic_k/0.jpg)](https://www.youtube.com/watch?v=u3pWKpmic_k)
+The completion pass removed a second broken inline service-worker registration that used `import.meta` from a classic script, upgraded the runtime router, moved build-only Workbox packages out of production dependencies, and reduced the production audit from critical/high findings to zero.
 
-With it you get an app that:
-- Has no build system to set up and no boilerplate code to add. Everything is included out of the box.
-- Has a Service Worker system using [Workbox](https://developers.google.com/web/tools/workbox/)
-- Scores close to 100 on Lighthouse out of the box
-- Using the fluent Web Components, you can build native looking PWAs on Windows
-- Has everything needed to be installable in the browser
-- Is ready to be package for the app stores using [PWABuilder](https://www.pwabuilder.com)
-- Uses the [Azure Static Web Apps CLI](https://azure.github.io/static-web-apps-cli) which enables emulating your production environment locally, and gets you ready for deploying to Azure Static Web Apps!
+## Stack
 
-and all with just a few button clicks 😊.
+- Lit
+- Vite
+- `vite-plugin-pwa`
+- `@pwabuilder/pwainstall`
+- `@vaadin/router`
+- TypeScript
 
-[Get Started!](https://docs.pwabuilder.com/#/starter/quick-start)
+## Requirements
 
-## Sample PWAs built with the starter!
+- Node.js 22
+- npm (lockfile: `package-lock.json`)
 
-- SimpleEdit: Simple Image editing and collage making app!
-   - Github: https://github.com/jgw96/simple-edit-2
-   - Web: https://gray-pond-01ccec410.azurestaticapps.net/
-   - Microsoft Store: https://www.microsoft.com/store/productId/9P53Q9BF3MV6
-   - Google Play: https://play.google.com/store/apps/details?id=net.azurestaticapps.thankful_tree_07da4921e.twa&hl=en&gl=US
+## Local development
 
-- Mail GO: Full featured email client. This app aims to show the power of the web by integrating many of the advanced APIs now avilable to PWAs, such as [receiving content shared from another app](https://docs.microsoft.com/en-us/microsoft-edge/progressive-web-apps-chromium/how-to/share#receiving-shared-content), [a custom titlebar](https://docs.microsoft.com/en-us/microsoft-edge/progressive-web-apps-chromium/how-to/window-controls-overlay), [sycing data in the background](https://docs.microsoft.com/en-us/microsoft-edge/progressive-web-apps-chromium/how-to/background-syncs) and more!
-  - Github: https://github.com/jgw96/graph-app
-  - Web: https://www.memosapp.app
-  - Microsoft Store: https://www.microsoft.com/store/productId/9NQW566N4866
+```bash
+npm ci
+npm run dev-server
+```
 
-## More Resources
-- [The pwa-starter docs](https://docs.pwabuilder.com/#/starter/quick-start)
+The Vite development server opens the app locally. `npm run dev` uses the Azure Static Web Apps CLI wrapper retained from the original starter and may download that CLI through `npx`.
+
+## Quality checks
+
+```bash
+npm test
+npm run typecheck
+npm run build
+npm audit --omit=dev --audit-level=high
+```
+
+GitHub Actions runs the same release-critical checks from `.github/workflows/quality.yml`.
+
+## PWA files
+
+- `public/manifest.json` — installability metadata.
+- `src/app-index.ts` — application shell and the single `registerSW({ immediate: true })` entry point.
+- `vite.config.ts` — VitePWA configuration.
+- generated `sw.js` — produced during the Vite production build.
+
+Do not add a second manual `navigator.serviceWorker.register(...)` block to `index.html`; service-worker ownership belongs to the VitePWA integration.
+
+## Deployment
+
+The repository is connected to a Vercel project named `pwa`. Build with `npm run build`. The current completion branch is verified in CI before it is considered deployable; production promotion is not automatic.
+
+## Provenance
+
+This is a maintained fork/reference derived from the PWABuilder PWA starter, not a claim of authorship of the upstream starter framework. Upstream PWABuilder documentation remains useful for broader packaging and store-distribution guidance.
